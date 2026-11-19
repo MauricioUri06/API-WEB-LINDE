@@ -5,7 +5,7 @@ namespace LINDE.Registro.Api.DTOs.Predios;
 /// <summary>
 /// Datos de entrada para registrar un predio.
 /// </summary>
-public class PredioCrearDto
+public class PredioCrearDto : IValidatableObject
 {
     [Required(ErrorMessage = "El nombre es obligatorio.")]
     [StringLength(150, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 150 caracteres.")]
@@ -25,4 +25,17 @@ public class PredioCrearDto
     [Required(ErrorMessage = "El productor es obligatorio.")]
     [Range(1, int.MaxValue, ErrorMessage = "El id del productor debe ser mayor a 0.")]
     public int? ProductorId { get; set; }
+
+    /// <summary>
+    /// Regla del dominio: el desmonte declarado no puede ser mayor que la superficie del predio.
+    /// </summary>
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DesmonteDeclaradoHa > SuperficieHa)
+        {
+            yield return new ValidationResult(
+                "El desmonte declarado no puede ser mayor que la superficie del predio.",
+                new[] { nameof(DesmonteDeclaradoHa) });
+        }
+    }
 }
