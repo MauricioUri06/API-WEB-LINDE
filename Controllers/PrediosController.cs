@@ -150,4 +150,80 @@ public class PrediosController(LindeDbContext db) : ControllerBase
 
         return CreatedAtAction(nameof(ObtenerPorId), new { id = predio.Id }, respuesta);
     }
+
+    /// <summary>
+    /// Actualiza los datos de un predio. No modifica su estado ni su fecha de registro.
+    /// </summary>
+    /// <param name="id">Identificador del predio.</param>
+    /// <param name="dto">Nuevos datos del predio.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <response code="204">Predio actualizado.</response>
+    /// <response code="400">Datos inválidos o el productor indicado no existe.</response>
+    /// <response code="404">No existe un predio con ese id.</response>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Actualizar(int id, PredioActualizarDto dto, CancellationToken ct)
+    {
+        var predio = await db.Predios.FirstOrDefaultAsync(p => p.Id == id, ct);
+
+        if (predio is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Predio no encontrado",
+                Detail = $"No existe un predio con id {id}.",
+                Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        var productorId = dto.ProductorId!.Value;
+
+        if (!await db.Productores.AnyAsync(p => p.Id == productorId, ct))
+        {
+            ModelState.AddModelError(nameof(dto.ProductorId), $"No existe un productor con id {productorId}.");
+            return ValidationProblem(ModelState);
+        }
+
+        predio.Nombre = dto.Nombre.Trim();
+        predio.Municipio = dto.Municipio.Trim();
+        predio.SuperficieHa = dto.SuperficieHa!.Value;
+        predio.DesmonteDeclaradoHa = dto.DesmonteDeclaradoHa;
+        predio.ProductorId = productorId;
+
+        await db.SaveChangesAsync(ct);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Elimina un predio.
+    /// </summary>
+    /// <param name="id">Identificador del predio.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <response code="204">Predio eliminado.</response>
+    /// <response code="404">No existe un predio con ese id.</response>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Eliminar(int id, CancellationToken ct)
+    {
+        var predio = await db.Predios.FirstOrDefaultAsync(p => p.Id == id, ct);
+
+        if (predio is null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Predio no encontrado",
+                Detail = $"No existe un predio con id {id}.",
+                Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        db.Predios.Remove(predio);
+        await db.SaveChangesAsync(ct);
+
+        return NoContent();
+    }
 }
