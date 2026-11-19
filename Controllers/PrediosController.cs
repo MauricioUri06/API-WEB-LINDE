@@ -226,4 +226,49 @@ public class PrediosController(LindeDbContext db) : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Recurso relacionado: lista los predios de un productor.
+    /// </summary>
+    /// <param name="productorId">Identificador del productor.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <response code="200">Predios del productor (puede estar vacía).</response>
+    /// <response code="404">No existe un productor con ese id.</response>
+    [HttpGet("/api/productores/{productorId:int}/predios")]
+    [ProducesResponseType(typeof(List<PredioRespuestaDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<PredioRespuestaDto>>> ListarPorProductor(
+        int productorId,
+        CancellationToken ct)
+    {
+        if (!await db.Productores.AnyAsync(p => p.Id == productorId, ct))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Productor no encontrado",
+                Detail = $"No existe un productor con id {productorId}.",
+                Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        var predios = await db.Predios
+            .AsNoTracking()
+            .Where(p => p.ProductorId == productorId)
+            .OrderBy(p => p.Nombre)
+            .Select(p => new PredioRespuestaDto
+            {
+                Id = p.Id,
+                Nombre = p.Nombre,
+                Municipio = p.Municipio,
+                SuperficieHa = p.SuperficieHa,
+                DesmonteDeclaradoHa = p.DesmonteDeclaradoHa,
+                Estado = p.Estado,
+                FechaRegistro = p.FechaRegistro,
+                ProductorId = p.ProductorId,
+                ProductorNombre = p.Productor.Nombre + " " + p.Productor.Apellido
+            })
+            .ToListAsync(ct);
+
+        return Ok(predios);
+    }
 }
