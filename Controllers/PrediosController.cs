@@ -94,4 +94,60 @@ public class PrediosController(LindeDbContext db) : ControllerBase
 
         return Ok(predio);
     }
+
+    /// <summary>
+    /// Registra un predio nuevo. El estado inicial es Registrado.
+    /// </summary>
+    /// <param name="dto">Datos del predio.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <response code="201">Predio creado. El encabezado Location apunta al nuevo recurso.</response>
+    /// <response code="400">Datos inválidos o el productor indicado no existe.</response>
+    [HttpPost]
+    [ProducesResponseType(typeof(PredioRespuestaDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PredioRespuestaDto>> Crear(PredioCrearDto dto, CancellationToken ct)
+    {
+        var productorId = dto.ProductorId!.Value;
+
+        var productor = await db.Productores
+            .AsNoTracking()
+            .Where(p => p.Id == productorId)
+            .Select(p => new { p.Nombre, p.Apellido })
+            .FirstOrDefaultAsync(ct);
+
+        if (productor is null)
+        {
+            ModelState.AddModelError(nameof(dto.ProductorId), $"No existe un productor con id {productorId}.");
+            return ValidationProblem(ModelState);
+        }
+
+        var predio = new Predio
+        {
+            Nombre = dto.Nombre.Trim(),
+            Municipio = dto.Municipio.Trim(),
+            SuperficieHa = dto.SuperficieHa!.Value,
+            DesmonteDeclaradoHa = dto.DesmonteDeclaradoHa,
+            Estado = EstadoPredio.Registrado,
+            FechaRegistro = DateTime.UtcNow,
+            ProductorId = productorId
+        };
+
+        db.Predios.Add(predio);
+        await db.SaveChangesAsync(ct);
+
+        var respuesta = new PredioRespuestaDto
+        {
+            Id = predio.Id,
+            Nombre = predio.Nombre,
+            Municipio = predio.Municipio,
+            SuperficieHa = predio.SuperficieHa,
+            DesmonteDeclaradoHa = predio.DesmonteDeclaradoHa,
+            Estado = predio.Estado,
+            FechaRegistro = predio.FechaRegistro,
+            ProductorId = predio.ProductorId,
+            ProductorNombre = productor.Nombre + " " + productor.Apellido
+        };
+
+        return CreatedAtAction(nameof(ObtenerPorId), new { id = predio.Id }, respuesta);
+    }
 }
