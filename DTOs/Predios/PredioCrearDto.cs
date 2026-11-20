@@ -16,10 +16,13 @@ public class PredioCrearDto : IValidatableObject
     public string Municipio { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La superficie es obligatoria.")]
-    [Range(typeof(decimal), "0.01", "1000000", ErrorMessage = "La superficie debe ser mayor a 0 ha.")]
+    // Los límites se leen en cultura invariable: con la cultura es-BO "0.01" no es un decimal válido y la validación fallaba con 500.
+    [Range(typeof(decimal), "0.01", "1000000", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true,
+        ErrorMessage = "La superficie debe ser mayor a 0 ha.")]
     public decimal? SuperficieHa { get; set; }
 
-    [Range(typeof(decimal), "0", "1000000", ErrorMessage = "El desmonte declarado no puede ser negativo.")]
+    [Range(typeof(decimal), "0", "1000000", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true,
+        ErrorMessage = "El desmonte declarado no puede ser negativo.")]
     public decimal? DesmonteDeclaradoHa { get; set; }
 
     [Required(ErrorMessage = "El productor es obligatorio.")]
