@@ -1,42 +1,32 @@
-
+# Pruebas de LINDE Registro API. En Rider o Visual Studio, cada bloque se ejecuta con el botón ▶.
+# Ejecutar en orden. Antes de las pruebas 7, 9, 18, 22 y 23B, copiar en las variables de abajo
+# el id que devolvió el POST correspondiente.
 @api = http://localhost:5282/api
+@productorNuevo = 4
+@predioNuevo = 6
+@predioPersistencia = 7
 
-# ==================================================
-# LINDE REGISTRO API - PRUEBAS DE SEBASTIAN
-# ==================================================
-
-# PRUEBA 0: Swagger
-# Abrir en navegador: http://localhost:5282/swagger
-
-# PRUEBA 1: Listar productores (200)
+### 1. Listar productores: 200
 GET {{api}}/productores
 
-###
-
-# PRUEBA 2: Obtener productor existente (200)
+### 2. Consultar productor por id: 200
 GET {{api}}/productores/1
 
-###
-
-# PRUEBA 3: Productor inexistente (404)
+### 3. Consultar productor inexistente: 404
 GET {{api}}/productores/999
 
-###
-
-# PRUEBA 4: Crear productor válido (201)
+### 4. Crear productor: 201 con encabezado Location (copiar el id en @productorNuevo)
 POST {{api}}/productores
 Content-Type: application/json
 
 {
-  "nombre": "Sebastian",
-  "apellido": "Maldonado",
-  "ci": "9876543210",
-  "telefono": "70012345"
+  "nombre": "Carlos",
+  "apellido": "Rojas",
+  "ci": "7894561",
+  "telefono": "70033445"
 }
 
-###
-
-# PRUEBA 5: Crear productor con datos inválidos (400)
+### 5. Crear productor sin nombre y con CI de 3 dígitos: 400
 POST {{api}}/productores
 Content-Type: application/json
 
@@ -47,137 +37,103 @@ Content-Type: application/json
   "telefono": "70000000"
 }
 
-###
-
-# PRUEBA 6: CI repetido (400)
+### 6. Crear productor con CI repetido (4567891): 400
 POST {{api}}/productores
 Content-Type: application/json
 
 {
   "nombre": "Productor",
   "apellido": "Duplicado",
-  "ci": "4567891",
-  "telefono": "70000000"
+  "ci": "4567891"
 }
 
-###
-
-# PRUEBA 7: Actualizar productor (204)
-# Cambia 4 por el ID devuelto en la prueba 4 si es diferente.
-PUT {{api}}/productores/4
+### 7. Actualizar el productor creado: 204
+PUT {{api}}/productores/{{productorNuevo}}
 Content-Type: application/json
 
 {
-  "nombre": "Sebastian Actualizado",
-  "apellido": "Maldonado",
-  "ci": "9876543210",
-  "telefono": "70012345"
+  "nombre": "Carlos Alberto",
+  "apellido": "Rojas",
+  "ci": "7894561",
+  "telefono": "70033445"
 }
 
-###
-
-# PRUEBA 8: Eliminar productor que tiene predios (409)
+### 8. Eliminar productor con predios (id 3): 409
 DELETE {{api}}/productores/3
 
-###
+### 9. Eliminar el productor creado: 204
+DELETE {{api}}/productores/{{productorNuevo}}
 
-# PRUEBA 9: Eliminar productor creado (204)
-# Cambia 4 por el ID devuelto en la prueba 4 si es diferente.
-DELETE {{api}}/productores/4
-
-###
-
-# PRUEBA 10: Listar predios (200)
+### 10. Listar predios: 200
 GET {{api}}/predios
 
-###
-
-# PRUEBA 11: Filtrar predios por municipio (200)
+### 11. Listar predios filtrados por municipio: 200
 GET {{api}}/predios?municipio=Pailón
 
-###
-
-# PRUEBA 12: Obtener predio existente (200)
+### 12. Consultar predio por id: 200
 GET {{api}}/predios/1
 
-###
-
-# PRUEBA 13: Predio inexistente (404)
+### 13. Consultar predio inexistente: 404
 GET {{api}}/predios/999
 
-###
-
-# PRUEBA 14: Crear predio válido (201)
+### 14. Crear predio: 201 con encabezado Location (copiar el id en @predioNuevo)
 POST {{api}}/predios
 Content-Type: application/json
 
 {
-  "nombre": "Predio de prueba",
+  "nombre": "Las Palmas",
   "municipio": "Pailón",
   "superficieHa": 100,
   "desmonteDeclaradoHa": 20,
   "productorId": 1
 }
 
-###
-
-# PRUEBA 15: Productor inexistente (400)
+### 15. Crear predio con productor inexistente (referencia inválida): 400
 POST {{api}}/predios
 Content-Type: application/json
 
 {
-  "nombre": "Predio inválido",
+  "nombre": "Predio sin dueño",
   "municipio": "Pailón",
   "superficieHa": 100,
-  "desmonteDeclaradoHa": 20,
   "productorId": 999
 }
 
-###
-
-# PRUEBA 16: Desmonte mayor a superficie (400)
+### 16. Crear predio con desmonte mayor que la superficie (regla del dominio): 400
 POST {{api}}/predios
 Content-Type: application/json
 
 {
   "nombre": "Predio inválido",
   "municipio": "Pailón",
-  "superficieHa": 50,
-  "desmonteDeclaradoHa": 80,
+  "superficieHa": 20,
+  "desmonteDeclaradoHa": 50,
   "productorId": 1
 }
 
-###
-
-# PRUEBA 17: Sin superficie (400)
+### 17. Crear predio sin superficie: 400
 POST {{api}}/predios
 Content-Type: application/json
 
 {
   "nombre": "Predio sin superficie",
   "municipio": "Pailón",
-  "desmonteDeclaradoHa": 10,
   "productorId": 1
 }
 
-###
-
-# PRUEBA 18: Actualizar predio (204)
-# Cambia 6 por el ID devuelto en la prueba 14 si es diferente.
-PUT {{api}}/predios/6
+### 18. Actualizar el predio creado: 204
+PUT {{api}}/predios/{{predioNuevo}}
 Content-Type: application/json
 
 {
-  "nombre": "Predio actualizado",
+  "nombre": "Las Palmas",
   "municipio": "Pailón",
   "superficieHa": 120,
   "desmonteDeclaradoHa": 25,
   "productorId": 1
 }
 
-###
-
-# PRUEBA 19: Actualizar predio inexistente (404)
+### 19. Actualizar predio inexistente: 404
 PUT {{api}}/predios/999
 Content-Type: application/json
 
@@ -185,46 +141,32 @@ Content-Type: application/json
   "nombre": "Predio inexistente",
   "municipio": "Pailón",
   "superficieHa": 100,
-  "desmonteDeclaradoHa": 20,
   "productorId": 1
 }
 
-###
-
-# PRUEBA 20: Listar predios de productor existente (200)
+### 20. Recurso relacionado: predios del productor 1: 200
 GET {{api}}/productores/1/predios
 
-###
-
-# PRUEBA 21: Listar predios de productor inexistente (404)
+### 21. Predios de un productor inexistente: 404
 GET {{api}}/productores/999/predios
 
-###
+### 22a. Eliminar el predio creado: 204
+DELETE {{api}}/predios/{{predioNuevo}}
 
-# PRUEBA 22: Eliminar predio y comprobar que ya no existe
-# Cambia 6 por el ID devuelto en la prueba 14 si es diferente.
-DELETE {{api}}/predios/6
+### 22b. Consultar el predio eliminado: 404
+GET {{api}}/predios/{{predioNuevo}}
 
-###
-
-GET {{api}}/predios/6
-
-###
-
-# PRUEBA 23A: Crear predio para prueba de persistencia (201)
+### 23a. Persistencia: crear un predio (copiar el id en @predioPersistencia): 201
 POST {{api}}/predios
 Content-Type: application/json
 
 {
   "nombre": "Predio Persistencia",
-  "municipio": "Pailón",
+  "municipio": "Mineros",
   "superficieHa": 150,
   "desmonteDeclaradoHa": 30,
-  "productorId": 1
+  "productorId": 2
 }
 
-###
-
-# PRUEBA 23B: Consultar el predio después de reiniciar la API (200)
-# Reemplaza 7 por el ID devuelto en la prueba 23A.
-GET {{api}}/predios/7
+### 23b. Persistencia: detener la API (Ctrl+C), volver a ejecutarla y consultar el predio: 200
+GET {{api}}/predios/{{predioPersistencia}}
