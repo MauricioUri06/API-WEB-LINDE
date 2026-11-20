@@ -83,11 +83,18 @@ public class ProductoresController(LindeDbContext db) : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ProductorRespuestaDto>> Crear(ProductorCrearDto dto, CancellationToken ct)
     {
+        var ci = dto.Ci!.Trim();
+        if (await db.Productores.AnyAsync(p => p.Ci == ci, ct))
+        {
+            ModelState.AddModelError(nameof(dto.Ci), "Ya existe un productor con ese CI.");
+            return ValidationProblem(ModelState);
+        }
+
         var productor = new Productor
         {
             Nombre = dto.Nombre!.Trim(),
             Apellido = dto.Apellido!.Trim(),
-            Ci = dto.Ci!.Trim(),
+            Ci = ci,
             Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
             FechaRegistro = DateTime.UtcNow
         };
@@ -125,9 +132,17 @@ public class ProductoresController(LindeDbContext db) : ControllerBase
         if (productor is null)
             return NoEncontrado(id);
 
+        var ci = dto.Ci!.Trim();
+        // El CI puede repetirse solo si es el del mismo productor.
+        if (await db.Productores.AnyAsync(p => p.Ci == ci && p.Id != id, ct))
+        {
+            ModelState.AddModelError(nameof(dto.Ci), "Ya existe un productor con ese CI.");
+            return ValidationProblem(ModelState);
+        }
+
         productor.Nombre = dto.Nombre!.Trim();
         productor.Apellido = dto.Apellido!.Trim();
-        productor.Ci = dto.Ci!.Trim();
+        productor.Ci = ci;
         productor.Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim();
 
         await db.SaveChangesAsync(ct);
@@ -135,18 +150,29 @@ public class ProductoresController(LindeDbContext db) : ControllerBase
     }
 
     /// <summary>
-    /// Elimina un productor.
+    /// Elimina un productor que no tenga predios.
     /// </summary>
     /// <param name="id">Id del productor.</param>
     /// <param name="ct">Token de cancelación.</param>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Eliminar(int id, CancellationToken ct)
     {
         var productor = await db.Productores.FindAsync([id], ct);
         if (productor is null)
             return NoEncontrado(id);
+
+        if (await db.Predios.AnyAsync(p => p.ProductorId == id, ct))
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "No se puede eliminar el productor",
+                Detail = $"El productor con id {id} tiene predios registrados.",
+                Status = StatusCodes.Status409Conflict
+            });
+        }
 
         db.Productores.Remove(productor);
         await db.SaveChangesAsync(ct);
