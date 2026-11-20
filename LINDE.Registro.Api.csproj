@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>LINDE.Registro.Api</RootNamespace>
+    <!-- Genera el XML con los comentarios /// para que Swagger muestre las descripciones. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 1591: no avisar por clases o miembros públicos sin comentario XML. -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

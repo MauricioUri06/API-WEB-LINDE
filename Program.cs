@@ -1,5 +1,5 @@
-using System.Text.Json.Serialization;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using LINDE.Registro.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -21,21 +21,19 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
-{var xml = Path.Combine(
-    AppContext.BaseDirectory,
-    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"
-);
-
-if (File.Exists(xml))
 {
-    c.IncludeXmlComments(xml);
-}
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "LINDE Registro API",
         Version = "v1",
         Description = "Gestión de productores y predios del sistema LINDE."
     });
+
+    // Comentarios XML (/// <summary>) de controladores y DTO: Swagger los muestra como descripciones.
+    // El archivo lo genera el compilador gracias a GenerateDocumentationFile en el .csproj.
+    var xml = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+    if (File.Exists(xml))
+        c.IncludeXmlComments(xml);
 });
 
 var app = builder.Build();
