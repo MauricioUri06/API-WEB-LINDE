@@ -109,6 +109,50 @@ public class ProductoresController(LindeDbContext db) : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id = productor.Id }, respuesta);
     }
 
+    /// <summary>
+    /// Actualiza los datos de un productor.
+    /// </summary>
+    /// <param name="id">Id del productor.</param>
+    /// <param name="dto">Datos nuevos.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Actualizar(int id, ProductorActualizarDto dto, CancellationToken ct)
+    {
+        var productor = await db.Productores.FindAsync([id], ct);
+        if (productor is null)
+            return NoEncontrado(id);
+
+        productor.Nombre = dto.Nombre!.Trim();
+        productor.Apellido = dto.Apellido!.Trim();
+        productor.Ci = dto.Ci!.Trim();
+        productor.Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim();
+
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Elimina un productor.
+    /// </summary>
+    /// <param name="id">Id del productor.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Eliminar(int id, CancellationToken ct)
+    {
+        var productor = await db.Productores.FindAsync([id], ct);
+        if (productor is null)
+            return NoEncontrado(id);
+
+        db.Productores.Remove(productor);
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
     private NotFoundObjectResult NoEncontrado(int id) =>
         NotFound(new ProblemDetails
         {
