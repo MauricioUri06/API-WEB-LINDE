@@ -1,5 +1,6 @@
 using LINDE.Registro.Api.Data;
 using LINDE.Registro.Api.DTOs.Productores;
+using LINDE.Registro.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,6 +69,44 @@ public class ProductoresController(LindeDbContext db) : ControllerBase
             return NoEncontrado(id);
 
         return Ok(productor);
+    }
+
+    /// <summary>
+    /// Registra un nuevo productor.
+    /// </summary>
+    /// <param name="dto">Datos del productor.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <response code="201">Productor creado; el encabezado Location apunta al recurso.</response>
+    /// <response code="400">Datos inválidos.</response>
+    [HttpPost]
+    [ProducesResponseType(typeof(ProductorRespuestaDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ProductorRespuestaDto>> Crear(ProductorCrearDto dto, CancellationToken ct)
+    {
+        var productor = new Productor
+        {
+            Nombre = dto.Nombre!.Trim(),
+            Apellido = dto.Apellido!.Trim(),
+            Ci = dto.Ci!.Trim(),
+            Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
+            FechaRegistro = DateTime.UtcNow
+        };
+
+        db.Productores.Add(productor);
+        await db.SaveChangesAsync(ct);
+
+        var respuesta = new ProductorRespuestaDto
+        {
+            Id = productor.Id,
+            Nombre = productor.Nombre,
+            Apellido = productor.Apellido,
+            Ci = productor.Ci,
+            Telefono = productor.Telefono,
+            FechaRegistro = productor.FechaRegistro,
+            CantidadPredios = 0
+        };
+
+        return CreatedAtAction(nameof(ObtenerPorId), new { id = productor.Id }, respuesta);
     }
 
     private NotFoundObjectResult NoEncontrado(int id) =>
