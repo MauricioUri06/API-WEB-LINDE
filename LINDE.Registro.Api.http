@@ -1,0 +1,230 @@
+
+@api = http://localhost:5282/api
+
+# ==================================================
+# LINDE REGISTRO API - PRUEBAS DE SEBASTIAN
+# ==================================================
+
+# PRUEBA 0: Swagger
+# Abrir en navegador: http://localhost:5282/swagger
+
+# PRUEBA 1: Listar productores (200)
+GET {{api}}/productores
+
+###
+
+# PRUEBA 2: Obtener productor existente (200)
+GET {{api}}/productores/1
+
+###
+
+# PRUEBA 3: Productor inexistente (404)
+GET {{api}}/productores/999
+
+###
+
+# PRUEBA 4: Crear productor válido (201)
+POST {{api}}/productores
+Content-Type: application/json
+
+{
+  "nombre": "Sebastian",
+  "apellido": "Maldonado",
+  "ci": "9876543210",
+  "telefono": "70012345"
+}
+
+###
+
+# PRUEBA 5: Crear productor con datos inválidos (400)
+POST {{api}}/productores
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "apellido": "Prueba",
+  "ci": "123",
+  "telefono": "70000000"
+}
+
+###
+
+# PRUEBA 6: CI repetido (400)
+POST {{api}}/productores
+Content-Type: application/json
+
+{
+  "nombre": "Productor",
+  "apellido": "Duplicado",
+  "ci": "4567891",
+  "telefono": "70000000"
+}
+
+###
+
+# PRUEBA 7: Actualizar productor (204)
+# Cambia 4 por el ID devuelto en la prueba 4 si es diferente.
+PUT {{api}}/productores/4
+Content-Type: application/json
+
+{
+  "nombre": "Sebastian Actualizado",
+  "apellido": "Maldonado",
+  "ci": "9876543210",
+  "telefono": "70012345"
+}
+
+###
+
+# PRUEBA 8: Eliminar productor que tiene predios (409)
+DELETE {{api}}/productores/3
+
+###
+
+# PRUEBA 9: Eliminar productor creado (204)
+# Cambia 4 por el ID devuelto en la prueba 4 si es diferente.
+DELETE {{api}}/productores/4
+
+###
+
+# PRUEBA 10: Listar predios (200)
+GET {{api}}/predios
+
+###
+
+# PRUEBA 11: Filtrar predios por municipio (200)
+GET {{api}}/predios?municipio=Pailón
+
+###
+
+# PRUEBA 12: Obtener predio existente (200)
+GET {{api}}/predios/1
+
+###
+
+# PRUEBA 13: Predio inexistente (404)
+GET {{api}}/predios/999
+
+###
+
+# PRUEBA 14: Crear predio válido (201)
+POST {{api}}/predios
+Content-Type: application/json
+
+{
+  "nombre": "Predio de prueba",
+  "municipio": "Pailón",
+  "superficieHa": 100,
+  "desmonteDeclaradoHa": 20,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 15: Productor inexistente (400)
+POST {{api}}/predios
+Content-Type: application/json
+
+{
+  "nombre": "Predio inválido",
+  "municipio": "Pailón",
+  "superficieHa": 100,
+  "desmonteDeclaradoHa": 20,
+  "productorId": 999
+}
+
+###
+
+# PRUEBA 16: Desmonte mayor a superficie (400)
+POST {{api}}/predios
+Content-Type: application/json
+
+{
+  "nombre": "Predio inválido",
+  "municipio": "Pailón",
+  "superficieHa": 50,
+  "desmonteDeclaradoHa": 80,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 17: Sin superficie (400)
+POST {{api}}/predios
+Content-Type: application/json
+
+{
+  "nombre": "Predio sin superficie",
+  "municipio": "Pailón",
+  "desmonteDeclaradoHa": 10,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 18: Actualizar predio (204)
+# Cambia 6 por el ID devuelto en la prueba 14 si es diferente.
+PUT {{api}}/predios/6
+Content-Type: application/json
+
+{
+  "nombre": "Predio actualizado",
+  "municipio": "Pailón",
+  "superficieHa": 120,
+  "desmonteDeclaradoHa": 25,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 19: Actualizar predio inexistente (404)
+PUT {{api}}/predios/999
+Content-Type: application/json
+
+{
+  "nombre": "Predio inexistente",
+  "municipio": "Pailón",
+  "superficieHa": 100,
+  "desmonteDeclaradoHa": 20,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 20: Listar predios de productor existente (200)
+GET {{api}}/productores/1/predios
+
+###
+
+# PRUEBA 21: Listar predios de productor inexistente (404)
+GET {{api}}/productores/999/predios
+
+###
+
+# PRUEBA 22: Eliminar predio y comprobar que ya no existe
+# Cambia 6 por el ID devuelto en la prueba 14 si es diferente.
+DELETE {{api}}/predios/6
+
+###
+
+GET {{api}}/predios/6
+
+###
+
+# PRUEBA 23A: Crear predio para prueba de persistencia (201)
+POST {{api}}/predios
+Content-Type: application/json
+
+{
+  "nombre": "Predio Persistencia",
+  "municipio": "Pailón",
+  "superficieHa": 150,
+  "desmonteDeclaradoHa": 30,
+  "productorId": 1
+}
+
+###
+
+# PRUEBA 23B: Consultar el predio después de reiniciar la API (200)
+# Reemplaza 7 por el ID devuelto en la prueba 23A.
+GET {{api}}/predios/7

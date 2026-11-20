@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Reflection;
 using LINDE.Registro.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -20,7 +21,15 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
+{var xml = Path.Combine(
+    AppContext.BaseDirectory,
+    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"
+);
+
+if (File.Exists(xml))
 {
+    c.IncludeXmlComments(xml);
+}
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "LINDE Registro API",
